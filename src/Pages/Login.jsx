@@ -1,92 +1,117 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import {
-  TextField,
-  Button,
-  Container,
-  Typography,
-  Box,
-  InputAdornment,
-  Fade,
-  Snackbar,
-  Alert
-} from '@mui/material';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import Lock from '@mui/icons-material/Lock';
+
+import React, { useState } from 'react';
+import { Box, Button, TextField, Typography, Paper, Snackbar, Alert, InputAdornment, IconButton } from '@mui/material';
+import {useAuth} from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import EmailIcon from '@mui/icons-material/Email';
+import LockIcon from '@mui/icons-material/Lock';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+
 
 export default function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [show, setShow] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = e => {
+
+  const handleTogglePassword = () => setShowPassword(!showPassword);
+
+  const handleSubmit = (e) => {
+
+   if (!email.includes('@')) {
+      setError('Correo inválido');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Contraseña mínima de 6 caracteres');
+      return;
+    }  
     e.preventDefault();
-    if (login(email, password)) {
-      setSuccess(true);
-     
+    const success = login(email, password);
+    if (success) {
+      navigate('/home');
     } else {
-      setError('Credenciales inválidas');
+      setError('Credenciales incorrectas');
     }
   };
 
-  useEffect(() => {
-    setShow(true);
-  }, []);
-
   return (
-    <Container maxWidth="sm">
-      <Fade in={show} timeout={600}>
-        <Box mt={5} p={4} sx={{ background: 'rgba(255,255,255,0.1)', borderRadius: 2, backdropFilter: 'blur(10px)' }}>
-          <Typography variant="h4" gutterBottom>Iniciar Sesión</Typography>
-          {error && <Typography color="error">{error}</Typography>}
-          <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Correo"
-              margin="normal"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <AccountCircle />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Contraseña"
-              type="password"
-              margin="normal"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button variant="contained" color="primary" type="submit" fullWidth sx={{ mt: 2 }}>
-              Entrar
-            </Button>
-          </form>
-        </Box>
-      </Fade>
+   <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Paper elevation={4} sx={{ p: 4, width: 340 }}>
+        <Typography variant="h5" mb={2} textAlign="center">
+          Iniciar sesión
+        </Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Correo"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            margin="normal"
+            type="email"
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon />
+                </InputAdornment>
+              )
+            }}
+          />
+          <TextField
+            fullWidth
+            label="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            margin="normal"
+            type={showPassword ? 'text' : 'password'}
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleTogglePassword} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
+          {error && (
+            <Typography color="error" variant="body2" mt={1}>
+              {error}
+            </Typography>
+          )}
+          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+            ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+          </Typography>
+          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
+            Ingresar
+          </Button>
+        </form>
 
-
-      <Snackbar open={success} autoHideDuration={2000}>
-        <Alert severity="success" sx={{ width: '100%' }}>
-          ¡Inicio de sesión exitoso!
-        </Alert>
-      </Snackbar>
-    </Container>
+       
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={1500}
+          onClose={() => setOpenSnackbar(false)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert onClose={() => setOpenSnackbar(false)} severity="success" sx={{ width: '100%' }}>
+            ¡Bienvenido al Blog Técnico!
+          </Alert>
+        </Snackbar>
+      </Paper>
+    </Box>
   );
 }
